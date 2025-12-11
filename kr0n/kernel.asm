@@ -8,6 +8,14 @@ STACK_TOP      equ 0x9000
 PROMPT         db 'kr0nos> ', 0
 NEWLINE        db 0x0D, 0x0A, 0
 
+; Version information
+KERNEL_MAJOR   db '0', 0
+KERNEL_MINOR   db '0', 0
+KERNEL_PATCH   db '2', 0
+KERNEL_NAME    db 'Kr0nos OS', 0
+KERNEL_VERSION db 'Version: 0.0.2', 0x0D, 0x0A, 0
+KERNEL_BUILD   db 'Build date: 2025-09-10', 0x0D, 0x0A, 0
+
 ; Kernel entry point
 kernel_main:
     ; Set up stack
@@ -66,6 +74,11 @@ process_command:
     mov di, cmd_exit
     call str_compare
     jc .exit
+    
+    ; Check for 'about' command
+    mov di, cmd_about
+    call str_compare
+    jc .about
 
     ; Unknown command
     mov si, unknown_cmd_msg
@@ -87,6 +100,11 @@ process_command:
     cli                 ; Disable interrupts
     hlt                 ; Halt the CPU
     jmp $               ; Just in case we get here
+
+.about:
+    mov si, about_text
+    call print_string
+    jmp .done
 
 .done:
     popa
@@ -211,17 +229,28 @@ str_compare:
 
 ; Data
 welcome_msg     db 'Kr0nos OS - Simple x86 Assembly OS', 0x0D, 0x0A, 0
-help_text       db 'Available commands:', 0x0D, 0x0A
-                db '  help  - Show this help', 0x0D, 0x0A
-                db '  clear - Clear the screen', 0x0D, 0x0A
-                db '  exit  - Shutdown the system', 0x0D, 0x0A, 0
+help_text:
+    db 'Available commands:', 0x0D, 0x0A
+    db '  help  - Show this help', 0x0D, 0x0A
+    db '  clear - Clear the screen', 0x0D, 0x0A
+    db '  exit  - Shutdown the computer', 0x0D, 0x0A
+    db '  about - Show system information', 0x0D, 0x0A, 0
+    
+about_text:
+    db 0x0D, 0x0A, '=== Krzeron OS ===', 0x0D, 0x0A, 0x0A
+    db 'A minimal x86 operating system', 0x0D, 0x0A, 0x0A
+    db 'Kernel version: 0.0.21', 0x0D, 0x0A
+    db 'Build date: 2025-09-10', 0x0D, 0x0A, 0x0A
+    db 'Written in pure x86 assembly >.0', 0x0D, 0x0A
+    db 'https://github.com/JamesAnanenkovic/KrzeronOperatingSystem', 0x0D, 0x0A, 0
 unknown_cmd_msg db 'Unknown command. Type "help" for available commands.', 0x0D, 0x0A, 0
 shutdown_msg    db 'System halted. You can now safely turn off your computer.', 0x0D, 0x0A, 0
 
 ; Command strings
-cmd_help        db 'help', 0
-cmd_clear       db 'clear', 0
-cmd_exit        db 'exit', 0
+cmd_help  db 'help', 0
+cmd_clear db 'clear', 0
+cmd_exit  db 'exit', 0
+cmd_about db 'about', 0
 
 ; Buffer for command input
 command_buffer  times 80 db 0
