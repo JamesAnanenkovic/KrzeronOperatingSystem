@@ -228,7 +228,7 @@ str_compare:
     ret
 
 ; Data
-welcome_msg     db 'Kr0nos OS - Simple x86 Assembly OS', 0x0D, 0x0A, 0
+welcome_msg     db 'Krzeron OS - Simple x86 Assembly OS', 0x0D, 0x0A, 0
 help_text:
     db 'Available commands:', 0x0D, 0x0A
     db '  help  - Show this help', 0x0D, 0x0A
