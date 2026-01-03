@@ -1,51 +1,66 @@
-# Makefile for Kr0nos OS (Pure Assembly)
+# Makefile for Kr0nOS (Pure Assembly)
 
 # Assembler
 ASM = nasm
 ASMFLAGS = -f bin
 
-# Output files
-BOOTLOADER = boot.bin
-KERNEL = kernel.bin
-OS_IMG = kr0nos.img
+# --- Build klasörü ---
+BUILD_DIR := build
 
-# Default target
+# --- Kaynak klasörleri ---
+BOOT_DIR := boot
+KERNEL_DIR := kernel
+
+# --- Kaynak dosyalar (source code) ---
+BOOT_SRC   := $(BOOT_DIR)/boot.asm
+KERNEL_SRC := $(KERNEL_DIR)/kernel.asm
+
+# --- Çıktı dosyaları (machine code) ---
+BOOTLOADER := $(BUILD_DIR)/boot.bin
+KERNEL     := $(BUILD_DIR)/kernel.bin
+OS_IMG     := $(BUILD_DIR)/kr0nos.img
+
+# --- Default target ---
 all: $(OS_IMG)
 
-# Create bootable floppy image (1.44MB)
+# --- Create bootable floppy image (1.44MB) ---
 $(OS_IMG): $(BOOTLOADER) $(KERNEL)
 	dd if=/dev/zero of=$(OS_IMG) bs=512 count=2880
 	mkfs.fat -F 12 -n "KR0NOS" $(OS_IMG)
 	dd if=$(BOOTLOADER) of=$(OS_IMG) conv=notrunc bs=512 count=1
 	dd if=$(KERNEL) of=$(OS_IMG) seek=1 conv=notrunc
 
-# Build bootloader (first sector)
-$(BOOTLOADER): boot.asm
+# --- Build bootloader ---
+$(BOOTLOADER): $(BOOT_SRC) | $(BUILD_DIR)
 	$(ASM) $(ASMFLAGS) -o $@ $<
 
-# Build kernel
-$(KERNEL): kernel.asm
+# --- Build kernel ---
+$(KERNEL): $(KERNEL_SRC) | $(BUILD_DIR)
 	$(ASM) $(ASMFLAGS) -o $@ $<
 
-# Run in QEMU (use -s for GDB stub)
+# --- Run in QEMU ---
 run: $(OS_IMG)
 	qemu-system-i386 -fda $(OS_IMG) -boot a
 
-# Run in QEMU with debug
+# --- Run in QEMU with debug ---
 run-debug: $(OS_IMG)
-	qemu-system-i386 -fda $(OS_IMG) -boot a -d int -no-reboot -D qemu_debug.log
+	qemu-system-i386 -fda $(OS_IMG) -boot a -d int -no-reboot -D $(BUILD_DIR)/qemu_debug.log
 
-# Create a bootable USB (WARNING: Be careful! This will overwrite the target device)
+# --- Create build directory if missing ---
+$(BUILD_DIR):
+	mkdir -p $(BUILD_DIR)
+
+# --- Create a bootable USB (WARNING: Be careful!) ---
 # Usage: make usb DISK=/dev/sdX
 usb: $(OS_IMG)
 	sudo dd if=$(OS_IMG) of=$(DISK) bs=4M status=progress
 	sync
 
-# Clean build files
+# --- Clean build files ---
 clean:
-	rm -f $(BOOTLOADER) $(KERNEL) $(OS_IMG) qemu_debug.log
+	rm -rf $(BUILD_DIR)
 
-# Help
+# --- Help ---
 help:
 	@echo "Kr0nos OS Build System"
 	@echo "Available targets:"

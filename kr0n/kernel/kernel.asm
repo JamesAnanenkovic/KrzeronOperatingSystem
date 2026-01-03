@@ -13,7 +13,7 @@ KERNEL_MAJOR   db '0', 0
 KERNEL_MINOR   db '0', 0
 KERNEL_PATCH   db '2', 0
 KERNEL_NAME    db 'Kr0nos OS', 0
-KERNEL_VERSION db 'Version: 0.0.2', 0x0D, 0x0A, 0
+KERNEL_VERSION db 'Version: 0.0.2.1', 0x0D, 0x0A, 0
 KERNEL_BUILD   db 'Build date: 2025-09-10', 0x0D, 0x0A, 0
 
 ; Kernel entry point
@@ -50,6 +50,16 @@ shell_loop:
     ; Process command
     call process_command
     jmp shell_loop
+    
+; Dosya sistemi yürütme komutu
+run_fs_command:
+    pusha
+    mov si, fs_not_found_msg
+    call print_string   ; debug mesaj: FS’de komut bulunamadı
+    stc           ; carry = FS komutu bulunamadı
+    popa
+    ret
+
 
 ; Process shell command
 process_command:
@@ -79,11 +89,16 @@ process_command:
     mov di, cmd_about
     call str_compare
     jc .about
+    
+	; Eğer yukarıdaki ifler çalışmadıysa, FS tablosuna bak
+	call run_fs_command
+	jc .fs_not_found  ; carry flag set değilse komut bulundu ve çalıştırıldı
 
-    ; Unknown command
-    mov si, unknown_cmd_msg
-    call print_string
-    jmp .done
+	; FS’de yoksa unknown message
+	.fs_not_found:
+	mov si, unknown_cmd_msg
+	call print_string
+	jmp .done
 
 .help:
     mov si, help_text
@@ -239,12 +254,14 @@ help_text:
 about_text:
     db 0x0D, 0x0A, '=== Krzeron OS ===', 0x0D, 0x0A, 0x0A
     db 'A minimal x86 operating system', 0x0D, 0x0A, 0x0A
-    db 'Kernel version: 0.0.21', 0x0D, 0x0A
+    db 'Kernel version: 0.0.2.1', 0x0D, 0x0A
     db 'Build date: 2025-09-10', 0x0D, 0x0A, 0x0A
     db 'Written in pure x86 assembly >.0', 0x0D, 0x0A
     db 'https://github.com/JamesAnanenkovic/KrzeronOperatingSystem', 0x0D, 0x0A, 0
 unknown_cmd_msg db 'Unknown command. Type "help" for available commands.', 0x0D, 0x0A, 0
 shutdown_msg    db 'System halted. You can now safely turn off your computer.', 0x0D, 0x0A, 0
+fs_not_found_msg db 'Command not found in file system!', 0x0D,0x0A,0
+
 
 ; Command strings
 cmd_help  db 'help', 0
