@@ -10,6 +10,7 @@ str_sysinfo:       db 'sysinfo', 0
 %include "drivers/memdetect.asm"
 
 section .data
+msg_ver:     db "Kr0nos version: ", KERNEL_VERSION, 13, 10, 0
 msg_cpu:     db "CPU: ", 0
 msg_ram:     db "RAM: ", 0
 msg_kb:      db " KB (", 0
@@ -25,6 +26,9 @@ global cmd_sysinfo
 
 cmd_sysinfo:
     pusha
+    
+    mov esi, msg_ver
+    call print_string_32
     
     ; ---- CPU Bilgisi ----
     call cpu_check_support

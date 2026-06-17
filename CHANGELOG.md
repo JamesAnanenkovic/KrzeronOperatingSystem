@@ -15,3 +15,4 @@
 | 0.0.6   | Added PIT (IRQ0, 100Hz), IRQ subsystem, tick counter, `uptime` command |
 | 0.0.6.1 | Added `sleep` command with arg parsing, improved command dispatcher |
 | 0.0.7   | Interrupt-driven keyboard (IRQ1, buffer, hlt), polling replaced |
+| 0.0.7.1 | Centralized version define, sysinfo shows version |

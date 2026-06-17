@@ -1,4 +1,5 @@
-; /kernel/kernel.asm - Main Kernel (v0.0.4 Modular)
+; /kernel/kernel.asm - Main Kernel
+%define KERNEL_VERSION "0.0.7.1"
 bits 32
 org 0x10000
 
@@ -380,7 +381,7 @@ shell_loop_32:
 ; Data
 ; ============================================================================
 section .data
-welcome_msg     db 'kr0nos v0.0.7', 13, 10, 0
+welcome_msg     db 'kr0nos v', KERNEL_VERSION, 13, 10, 0
 prompt_str      db 'kr0nos> ', 0
 str_unknown     db 'Unknown command', 13, 10, 0
 
