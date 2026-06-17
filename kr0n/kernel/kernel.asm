@@ -7,6 +7,7 @@ COLOR_ATTRIBUTE equ 0x07
 STACK_TOP       equ 0x200000
 KEYBOARD_DATA   equ 0x60
 KEYBOARD_STATUS equ 0x64
+SERIAL_PORT     equ 0x3F8
 
 section .text
 kernel_main:
@@ -17,6 +18,7 @@ kernel_main:
     mov esp, STACK_TOP
     
     call idt_init
+    call serial_init
     call clear_screen_32
     
     mov esi, welcome_msg
@@ -35,6 +37,21 @@ clear_screen_32:
     rep stosw
     mov byte [cursor_x], 0
     mov byte [cursor_y], 0
+    ; Serial ANSI clear
+    mov al, 27
+    call serial_print_char_32
+    mov al, '['
+    call serial_print_char_32
+    mov al, '2'
+    call serial_print_char_32
+    mov al, 'J'
+    call serial_print_char_32
+    mov al, 27
+    call serial_print_char_32
+    mov al, '['
+    call serial_print_char_32
+    mov al, 'H'
+    call serial_print_char_32
     popa
     ret
 
@@ -52,6 +69,7 @@ print_string_32:
 
 print_char_32:
     pusha
+    call serial_print_char_32
     cmp al, 13
     je .cr
     cmp al, 10
@@ -112,6 +130,46 @@ scroll_screen:
     ret
 
 ; ============================================================================
+; Serial Port Routines
+; ============================================================================
+serial_init:
+    pusha
+    mov dx, SERIAL_PORT + 1
+    mov al, 0
+    out dx, al
+    mov dx, SERIAL_PORT + 3
+    mov al, 0x80
+    out dx, al
+    mov dx, SERIAL_PORT
+    mov al, 1
+    out dx, al
+    mov dx, SERIAL_PORT + 1
+    mov al, 0
+    out dx, al
+    mov dx, SERIAL_PORT + 3
+    mov al, 0x03
+    out dx, al
+    mov dx, SERIAL_PORT + 2
+    mov al, 0xC7
+    out dx, al
+    popa
+    ret
+
+serial_print_char_32:
+    push dx
+    push ax
+    mov dx, SERIAL_PORT + 5
+.wait:
+    in al, dx
+    test al, 0x20
+    jz .wait
+    mov dx, SERIAL_PORT
+    pop ax
+    out dx, al
+    pop dx
+    ret
+
+; ============================================================================
 ; Keyboard Input
 ; ============================================================================
 read_line_32:
@@ -121,6 +179,7 @@ read_line_32:
 
 .read_loop:
     call wait_key
+    jc .got_ascii
     
     test al, 0x80
     jnz .read_loop
@@ -128,7 +187,19 @@ read_line_32:
     call scancode_to_ascii_v2
     test al, al
     jz .read_loop
-    
+    jmp .check_char
+
+.got_ascii:
+    cmp al, 13
+    je .done
+    cmp al, 10
+    je .done
+    cmp al, 8
+    je .handle_backspace
+    cmp al, 127
+    je .handle_backspace
+
+.check_char:
     cmp al, 13              ; Enter
     je .done
     
@@ -171,8 +242,20 @@ read_line_32:
 wait_key:
     in al, KEYBOARD_STATUS
     test al, 1
-    jz wait_key
+    jnz .ps2
+    mov dx, SERIAL_PORT + 5
+    in al, dx
+    test al, 1
+    jnz .serial
+    jmp wait_key
+.ps2:
     in al, KEYBOARD_DATA
+    clc
+    ret
+.serial:
+    mov dx, SERIAL_PORT
+    in al, dx
+    stc
     ret
 
 scancode_to_ascii_v2:
@@ -240,7 +323,7 @@ shell_loop_32:
 ; Data
 ; ============================================================================
 section .data
-welcome_msg     db 'kr0nos v0.0.4', 13, 10, 0
+welcome_msg     db 'kr0nos v0.0.5.2', 13, 10, 0
 prompt_str      db 'kr0nos> ', 0
 str_unknown     db 'Unknown command', 13, 10, 0
 
