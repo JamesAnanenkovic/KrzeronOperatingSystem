@@ -15,6 +15,7 @@ Its goal is to provide a small, understandable, and easily extendable OS kernel.
 | 0.0.3.1 | Exit command fixed (QEMU compat) |
 | 0.0.4   | 16-bit real mode → 32-bit protected mode |
 | 0.0.5   | Added `sysinfo` command (CPU + RAM), memory detection moved to bootloader, unknown command error message |
+| 0.0.5.1 | Added IDT with exception handlers, PIC remapped and masked, kernel panic messages |
 
 ## Features
 
@@ -27,6 +28,7 @@ Its goal is to provide a small, understandable, and easily extendable OS kernel.
   - `uname`    – Show system name
   - `read`     – Read and hex-dump a disk sector (experimental, ATA PIO LBA28)
   - `sysinfo`  – Show CPU info (CPUID) and RAM size (E820 via bootloader)
+- IDT with exception handlers (kernel panic on crash instead of reboot)
 - Modular driver system (`drivers/`)
 - Structured build system (`Makefile`)
 - Testable using QEMU
@@ -60,6 +62,7 @@ kr0n/
 ├── boot/boot.asm           # Bootloader (real mode → PM)
 ├── kernel/
 │   ├── kernel.asm          # Main kernel (screen, keyboard, shell)
+│   ├── idt.asm             # IDT, exception handlers, PIC
 │   ├── commands.asm        # Command table and dispatcher
 │   └── sc/                 # Shell commands
 │       ├── help.asm

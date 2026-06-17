@@ -16,6 +16,7 @@ kernel_main:
     mov ss, ax
     mov esp, STACK_TOP
     
+    call idt_init
     call clear_screen_32
     
     mov esi, welcome_msg
@@ -249,6 +250,7 @@ cursor_y        resb 1         ; Fixed: matches byte access in code
 command_buffer  resb 80
 
 ; ============================================================================
-; Include Modular Command System
+; Include IDT and Modular Command System
 ; ============================================================================
+%include "idt.asm"
 %include "commands.asm"
