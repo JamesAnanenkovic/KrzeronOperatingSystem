@@ -16,3 +16,4 @@
 | 0.0.6.1 | Added `sleep` command with arg parsing, improved command dispatcher |
 | 0.0.7   | Interrupt-driven keyboard (IRQ1, buffer, hlt), polling replaced |
 | 0.0.7.1 | Centralized version define, sysinfo shows version |
+| 0.0.7.2 | Added version, clr, reboot commands; removed clear |

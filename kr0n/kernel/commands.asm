@@ -12,6 +12,8 @@
 %include "sc/sysinfo.asm"
 %include "sc/uptime.asm"
 %include "sc/sleep.asm"
+%include "sc/version.asm"
+%include "sc/reboot.asm"
 
 section .data
 align 4
@@ -25,7 +27,6 @@ align 4
 ; ============================================
 command_table:
     dd str_help,    cmd_help
-    dd str_clear,   cmd_clear
     dd str_about,   cmd_about
     dd str_exit,    cmd_exit
     dd str_read,    cmd_read
@@ -33,6 +34,9 @@ command_table:
     dd str_sysinfo, cmd_sysinfo
     dd str_uptime,  cmd_uptime
     dd str_sleep,   cmd_sleep
+    dd str_version, cmd_version
+    dd str_clr,     cmd_clr
+    dd str_reboot,  cmd_reboot
     dd 0, 0                    ; Null terminator
 
 section .text

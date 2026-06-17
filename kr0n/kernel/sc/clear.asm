@@ -1,10 +1,10 @@
 ; /kernel/sc/clear.asm
-global cmd_clear, str_clear
+global cmd_clr, str_clr
 
 section .data
-str_clear:      db 'clear', 0
+str_clr:        db 'clr', 0
 
 section .text
-cmd_clear:
+cmd_clr:
     call clear_screen_32
     ret
