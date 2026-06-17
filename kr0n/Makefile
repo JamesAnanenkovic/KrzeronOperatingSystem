@@ -29,6 +29,7 @@ KERNEL_DEPS = $(KERNEL_SRC) \
 BOOT_BIN    = $(BUILD_DIR)/boot.bin
 KERNEL_BIN  = $(BUILD_DIR)/kernel.bin
 IMAGE       = $(BUILD_DIR)/kr0nos.img
+HDD_IMG     = $(BUILD_DIR)/hdd.img
 MAX_KERNEL_SIZE = 64512
 
 # Colors (using printf for compatibility)
@@ -42,7 +43,9 @@ NC          = \033[0m
 # Main Targets
 # ==============================================================================
 
-.PHONY: all run run-text debug clean info
+.PHONY: all run run-text debug clean info hdd
+
+all: $(IMAGE) $(HDD_IMG)
 
 all: $(IMAGE)
 
@@ -78,26 +81,36 @@ $(IMAGE): $(BOOT_BIN) $(KERNEL_BIN)
 	@dd if=$(KERNEL_BIN) of=$(IMAGE) conv=notrunc bs=512 seek=1 status=none
 	@printf "$(GREEN)[OK]$(NC) Build complete: $(IMAGE)\n"
 
+$(HDD_IMG): | $(BUILD_DIR)
+	@printf "$(YELLOW)[HDD]$(NC) Creating test HDD image...\n"
+	@dd if=/dev/zero of=$(HDD_IMG) bs=512 count=2048 status=none
+	@printf "$(GREEN)[HDD]$(NC) Writing pattern to HDD...\n"
+	@python3 -c 'import sys; sys.stdout.buffer.write(bytes(range(256))*2)' | dd of=$(HDD_IMG) conv=notrunc bs=512 count=1 status=none
+	@printf "$(GREEN)[HDD]$(NC) Setting boot signature...\n"
+	@printf '\x55\xAA' | dd of=$(HDD_IMG) conv=notrunc bs=1 seek=510 status=none
+
 # ==============================================================================
 # Runtime Targets
 # ==============================================================================
 
-run: $(IMAGE)
+QEMU_HDD = -hda $(HDD_IMG)
+
+run: $(IMAGE) $(HDD_IMG)
 	@printf "$(GREEN)[RUN]$(NC) Starting kr0nos ( graphical mode )...\n"
-	$(QEMU) -fda $(IMAGE) -boot a
+	$(QEMU) -fda $(IMAGE) $(QEMU_HDD) -boot a
 
-run-text: $(IMAGE)
+run-text: $(IMAGE) $(HDD_IMG)
 	@printf "$(GREEN)[RUN]$(NC) Starting kr0nos ( text mode )...\n"
-	$(QEMU) -fda $(IMAGE) -boot a -nographic
+	$(QEMU) -fda $(IMAGE) $(QEMU_HDD) -boot a -nographic
 
-debug: $(IMAGE)
+debug: $(IMAGE) $(HDD_IMG)
 	@printf "$(GREEN)[DBG]$(NC) Starting with serial debug...\n"
-	$(QEMU) -fda $(IMAGE) -boot a -serial stdio
+	$(QEMU) -fda $(IMAGE) $(QEMU_HDD) -boot a -serial stdio
 
-gdb: $(IMAGE)
+gdb: $(IMAGE) $(HDD_IMG)
 	@printf "$(GREEN)[GDB]$(NC) Starting QEMU GDB server on :1234...\n"
 	@printf "$(YELLOW)[GDB]$(NC) Connect with: gdb target remote :1234\n"
-	$(QEMU) -fda $(IMAGE) -boot a -s -S -serial stdio
+	$(QEMU) -fda $(IMAGE) $(QEMU_HDD) -boot a -s -S -serial stdio
 
 # ==============================================================================
 # Utility Targets

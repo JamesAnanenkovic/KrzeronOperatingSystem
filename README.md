@@ -84,7 +84,8 @@ kr0n/
 │       └── testalloc.asm
 ├── drivers/
 │   ├── cpuid.asm           # CPU vendor/brand detection
-│   └── memdetect.asm       # Memory size detection
+│   ├── memdetect.asm       # Memory size detection
+│   └── ata.asm             # ATA PIO LBA28 disk driver
 ├── build/                  # Build outputs (auto-generated)
 ├── Makefile
 ├── CHANGELOG.md
