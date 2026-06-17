@@ -15,6 +15,7 @@ str_helpmsg:    db 'Available commands:', 13, 10
                 db '  version - Show kernel version', 13, 10
                 db '  clr     - Clear the screen', 13, 10
                 db '  reboot  - Reboot the system', 13, 10
+                db '  free    - Show physical memory usage', 13, 10
                 db '  exit    - Halt the system', 13, 10, 0
 
 section .text

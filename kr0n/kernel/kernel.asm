@@ -1,5 +1,5 @@
 ; /kernel/kernel.asm - Main Kernel
-%define KERNEL_VERSION "0.0.7.2"
+%define KERNEL_VERSION "0.0.8"
 bits 32
 org 0x10000
 
@@ -22,6 +22,7 @@ kernel_main:
     call serial_init
     call pit_init
     call kbd_init
+    call mm_init
     sti
     call clear_screen_32
     
@@ -398,3 +399,6 @@ kbd_ready       resb 1
 %include "pit.asm"
 %include "idt.asm"
 %include "commands.asm"
+%include "mm.asm"
+
+end_of_kernel:

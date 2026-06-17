@@ -14,6 +14,7 @@
 %include "sc/sleep.asm"
 %include "sc/version.asm"
 %include "sc/reboot.asm"
+%include "sc/free.asm"
 
 section .data
 align 4
@@ -37,6 +38,7 @@ command_table:
     dd str_version, cmd_version
     dd str_clr,     cmd_clr
     dd str_reboot,  cmd_reboot
+    dd str_free,    cmd_free
     dd 0, 0                    ; Null terminator
 
 section .text
