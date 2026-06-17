@@ -6,7 +6,7 @@ str_about:      db 'about', 0
 str_aboutmsg:   db 13, 10, '=== Krzeron OS ===', 13, 10, 10
                 db 'Built with modular command architecture', 13, 10
                 db 'A minimal x86 operating system', 13, 10, 10
-				db 'Kernel version: 0.0.6.1 (Protected Mode)', 13, 10
+				db 'Kernel version: 0.0.7 (Protected Mode)', 13, 10
 				db 'Last update: 16-06-2026', 13, 10, 10
 				db 'Written in pure x86 assembly', 13, 10
 				db 'https://github.com/JamesAnanenkovic/KrzeronOperatingSystem', 13, 10, 0

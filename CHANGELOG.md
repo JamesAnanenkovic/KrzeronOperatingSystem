@@ -14,3 +14,4 @@
 | 0.0.5.2 | Added serial I/O (COM1, 115200 baud), ANSI escape clear, dual PS/2 + serial input |
 | 0.0.6   | Added PIT (IRQ0, 100Hz), IRQ subsystem, tick counter, `uptime` command |
 | 0.0.6.1 | Added `sleep` command with arg parsing, improved command dispatcher |
+| 0.0.7   | Interrupt-driven keyboard (IRQ1, buffer, hlt), polling replaced |

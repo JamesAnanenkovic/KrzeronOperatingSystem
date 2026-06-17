@@ -20,6 +20,7 @@ kernel_main:
     call idt_init
     call serial_init
     call pit_init
+    call kbd_init
     sti
     call clear_screen_32
     
@@ -241,17 +242,46 @@ read_line_32:
     pop ebx
     ret
 
+; ============================================================================
+; Interrupt-driven Keyboard
+; ============================================================================
+kbd_handler:
+    push ax
+    in al, KEYBOARD_DATA
+    mov [kbd_scancode], al
+    mov byte [kbd_ready], 1
+    pop ax
+    ret
+
+kbd_init:
+    pusha
+    mov eax, kbd_handler
+    push eax
+    push dword 1
+    call register_irq_handler
+    add esp, 8
+
+    in al, 0x21
+    and al, 0xFD
+    out 0x21, al
+    popa
+    ret
+
 wait_key:
-    in al, KEYBOARD_STATUS
-    test al, 1
-    jnz .ps2
     mov dx, SERIAL_PORT + 5
     in al, dx
     test al, 1
     jnz .serial
+    cli
+    cmp byte [kbd_ready], 0
+    jne .kbd
+    sti
+    hlt
     jmp wait_key
-.ps2:
-    in al, KEYBOARD_DATA
+.kbd:
+    mov al, [kbd_scancode]
+    mov byte [kbd_ready], 0
+    sti
     clc
     ret
 .serial:
@@ -350,7 +380,7 @@ shell_loop_32:
 ; Data
 ; ============================================================================
 section .data
-welcome_msg     db 'kr0nos v0.0.6.1', 13, 10, 0
+welcome_msg     db 'kr0nos v0.0.7', 13, 10, 0
 prompt_str      db 'kr0nos> ', 0
 str_unknown     db 'Unknown command', 13, 10, 0
 
@@ -358,6 +388,8 @@ section .bss
 cursor_x        resb 1         ; Fixed: was dd (dword), now byte
 cursor_y        resb 1         ; Fixed: matches byte access in code
 command_buffer  resb 80
+kbd_scancode    resb 1
+kbd_ready       resb 1
 
 ; ============================================================================
 ; Include IDT and Modular Command System
