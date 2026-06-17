@@ -1,5 +1,5 @@
 ; /kernel/kernel.asm - Main Kernel
-%define KERNEL_VERSION "0.0.9"
+%define KERNEL_VERSION "0.0.9.1"
 bits 32
 org 0x10000
 

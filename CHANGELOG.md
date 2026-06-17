@@ -19,3 +19,4 @@
 | 0.0.7.2 | Added version, clr, reboot commands; removed clear |
 | 0.0.8   | Physical page allocator (bitmap-based, 4KB pages), `free` command |
 | 0.0.9   | Heap allocator (malloc/free, free-list based), `testalloc` command |
+| 0.0.9.1 | Enhanced `testalloc` with 3 tests (basic, multi-alloc, fragmentation), README updated |
