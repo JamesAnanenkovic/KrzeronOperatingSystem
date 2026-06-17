@@ -5,19 +5,7 @@ Its goal is to provide a small, understandable, and easily extendable OS kernel.
 
 ## Version History
 
-| Version | Changes |
-|---------|---------|
-| 0.0.1   | Initial project setup |
-| 0.0.2   | Added "about" command |
-| 0.0.2.1 | Fixed "about" command |
-| 0.0.2.2 | Boot and kernel fixes, improved Makefile, preparation for filesystem |
-| 0.0.3   | Kernel refactored, command system fixed, added "read" and "uname" |
-| 0.0.3.1 | Exit command fixed (QEMU compat) |
-| 0.0.4   | 16-bit real mode → 32-bit protected mode |
-| 0.0.5   | Added `sysinfo` command (CPU + RAM), memory detection moved to bootloader, unknown command error message |
-| 0.0.5.1 | Added IDT with exception handlers, PIC remapped and masked, kernel panic messages |
-| 0.0.5.2 | Added serial I/O (COM1, 115200 baud), ANSI escape clear, dual PS/2 + serial input |
-| 0.0.6   | Added PIT (IRQ0, 100Hz), IRQ subsystem, tick counter, `uptime` command |
+See [CHANGELOG](CHANGELOG.md) for full version history.
 
 ## Features
 
@@ -31,6 +19,7 @@ Its goal is to provide a small, understandable, and easily extendable OS kernel.
   - `read`     – Read and hex-dump a disk sector (experimental, ATA PIO LBA28)
   - `sysinfo`  – Show CPU info (CPUID) and RAM size (E820 via bootloader)
   - `uptime`   – Show system uptime in ticks
+  - `sleep`    – Sleep for N ticks (`sleep <n>`)
 - IDT with exception handlers (kernel panic on crash instead of reboot)
 - PIT timer (IRQ0, 100Hz) with tick counter
 - Serial I/O (COM1, 115200 baud) for text-mode terminal support
@@ -78,12 +67,14 @@ kr0n/
 │       ├── uname.asm
 │       ├── read.asm
 │       ├── sysinfo.asm
-│       └── uptime.asm
+│       ├── uptime.asm
+│       └── sleep.asm
 ├── drivers/
 │   ├── cpuid.asm           # CPU vendor/brand detection
 │   └── memdetect.asm       # Memory size detection
 ├── build/                  # Build outputs (auto-generated)
 ├── Makefile
+├── CHANGELOG.md
 └── README.md
 ```
 

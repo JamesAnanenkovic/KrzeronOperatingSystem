@@ -10,6 +10,8 @@ str_helpmsg:    db 'Available commands:', 13, 10
                 db '  uname   - Shows OS that you are using right now', 13, 10
                 db '  read    - Try to read a sector (exprimental)', 13, 10
                 db '  sysinfo - Shows hardware information', 13, 10
+                db '  uptime  - Show system uptime in ticks', 13, 10
+                db '  sleep   - Sleep for N ticks (usage: sleep <n>)', 13, 10
                 db '  exit    - Halt the system', 13, 10, 0
 
 section .text

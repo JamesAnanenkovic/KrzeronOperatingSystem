@@ -11,6 +11,7 @@
 %include "sc/uname.asm"
 %include "sc/sysinfo.asm"
 %include "sc/uptime.asm"
+%include "sc/sleep.asm"
 
 section .data
 align 4
@@ -31,6 +32,7 @@ command_table:
     dd str_uname,   cmd_uname
     dd str_sysinfo, cmd_sysinfo
     dd str_uptime,  cmd_uptime
+    dd str_sleep,   cmd_sleep
     dd 0, 0                    ; Null terminator
 
 section .text
@@ -43,33 +45,62 @@ execute_command:
     pusha
     mov ebx, command_table
     
-.search_loop:
-    mov edi, [ebx]          ; name pointer
+    ; Find first space or null in command buffer
+    mov edi, esi
+    xor ecx, ecx
+.find_end:
+    cmp byte [edi + ecx], 0
+    je .no_arg
+    cmp byte [edi + ecx], ' '
+    je .has_arg
+    inc ecx
+    jmp .find_end
+    
+.has_arg:
+    mov byte [edi + ecx], 0     ; null-terminate command name
+    lea edx, [edi + ecx + 1]    ; arg pointer
+    jmp .search
+    
+.no_arg:
+    xor edx, edx               ; no args
+    
+.search:
+    mov edi, [ebx]              ; name pointer
     test edi, edi
     jz .not_found
     
-    ; Karşılaştır
     push esi
     push edi
     pop edi
     pop esi
     push esi
-    call strcmp             ; kernel.asm'den geliyor
+    call strcmp
     pop esi
     
     test eax, eax
     jz .found
     
-    add ebx, 8              ; sonraki giriş
-    jmp .search_loop
+    add ebx, 8
+    jmp .search
     
 .found:
-    mov eax, [ebx + 4]      ; function pointer
+    test edx, edx
+    jz .call_handler
+    mov byte [edx - 1], ' '     ; restore space
+    
+.call_handler:
+    mov eax, [ebx + 4]          ; function pointer
+    mov esi, edx                ; pass arg pointer (or 0)
     call eax
     popa
     ret
     
 .not_found:
+    test edx, edx
+    jz .print_unknown
+    mov byte [edx - 1], ' '
+    
+.print_unknown:
     mov esi, str_unknown
     call print_string_32
     popa

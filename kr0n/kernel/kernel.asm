@@ -302,6 +302,31 @@ strcmp:
     pop ebx
     ret
 
+global parse_number
+parse_number:
+    push ebx
+    push ecx
+    xor eax, eax
+    xor ecx, ecx
+    mov ebx, 10
+.loop:
+    mov cl, [esi]
+    test cl, cl
+    jz .done
+    cmp cl, '0'
+    jb .done
+    cmp cl, '9'
+    ja .done
+    sub cl, '0'
+    mul ebx
+    add eax, ecx
+    inc esi
+    jmp .loop
+.done:
+    pop ecx
+    pop ebx
+    ret
+
 ; ============================================================================
 ; Main Shell Loop
 ; ============================================================================
@@ -325,7 +350,7 @@ shell_loop_32:
 ; Data
 ; ============================================================================
 section .data
-welcome_msg     db 'kr0nos v0.0.6', 13, 10, 0
+welcome_msg     db 'kr0nos v0.0.6.1', 13, 10, 0
 prompt_str      db 'kr0nos> ', 0
 str_unknown     db 'Unknown command', 13, 10, 0
 
