@@ -17,6 +17,7 @@ Its goal is to provide a small, understandable, and easily extendable OS kernel.
 | 0.0.5   | Added `sysinfo` command (CPU + RAM), memory detection moved to bootloader, unknown command error message |
 | 0.0.5.1 | Added IDT with exception handlers, PIC remapped and masked, kernel panic messages |
 | 0.0.5.2 | Added serial I/O (COM1, 115200 baud), ANSI escape clear, dual PS/2 + serial input |
+| 0.0.6   | Added PIT (IRQ0, 100Hz), IRQ subsystem, tick counter, `uptime` command |
 
 ## Features
 
@@ -29,7 +30,9 @@ Its goal is to provide a small, understandable, and easily extendable OS kernel.
   - `uname`    – Show system name
   - `read`     – Read and hex-dump a disk sector (experimental, ATA PIO LBA28)
   - `sysinfo`  – Show CPU info (CPUID) and RAM size (E820 via bootloader)
+  - `uptime`   – Show system uptime in ticks
 - IDT with exception handlers (kernel panic on crash instead of reboot)
+- PIT timer (IRQ0, 100Hz) with tick counter
 - Serial I/O (COM1, 115200 baud) for text-mode terminal support
 - Modular driver system (`drivers/`)
 - Structured build system (`Makefile`)
@@ -64,7 +67,8 @@ kr0n/
 ├── boot/boot.asm           # Bootloader (real mode → PM)
 ├── kernel/
 │   ├── kernel.asm          # Main kernel (screen, keyboard, serial I/O, shell)
-│   ├── idt.asm             # IDT, exception handlers, PIC
+│   ├── pit.asm             # PIT driver (IRQ0, 100Hz tick)
+│   ├── idt.asm             # IDT, exception handlers, PIC, IRQ subsystem
 │   ├── commands.asm        # Command table and dispatcher
 │   └── sc/                 # Shell commands
 │       ├── help.asm
@@ -73,7 +77,8 @@ kr0n/
 │       ├── exit.asm
 │       ├── uname.asm
 │       ├── read.asm
-│       └── sysinfo.asm
+│       ├── sysinfo.asm
+│       └── uptime.asm
 ├── drivers/
 │   ├── cpuid.asm           # CPU vendor/brand detection
 │   └── memdetect.asm       # Memory size detection

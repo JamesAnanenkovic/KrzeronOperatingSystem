@@ -19,6 +19,8 @@ kernel_main:
     
     call idt_init
     call serial_init
+    call pit_init
+    sti
     call clear_screen_32
     
     mov esi, welcome_msg
@@ -323,7 +325,7 @@ shell_loop_32:
 ; Data
 ; ============================================================================
 section .data
-welcome_msg     db 'kr0nos v0.0.5.2', 13, 10, 0
+welcome_msg     db 'kr0nos v0.0.6', 13, 10, 0
 prompt_str      db 'kr0nos> ', 0
 str_unknown     db 'Unknown command', 13, 10, 0
 
@@ -335,5 +337,6 @@ command_buffer  resb 80
 ; ============================================================================
 ; Include IDT and Modular Command System
 ; ============================================================================
+%include "pit.asm"
 %include "idt.asm"
 %include "commands.asm"

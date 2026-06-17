@@ -35,9 +35,14 @@ msg_cr2_val   db ' | CR2: ', 0
 msg_halt      db 13, 10, 'System halted', 0
 msg_panic_nl  db 13, 10, 0
 
+section .data
+irq_handler_table:
+    dd 0, 0, 0, 0, 0, 0, 0, 0
+    dd 0, 0, 0, 0, 0, 0, 0, 0
+
 section .bss
 align 8
-idt_entries:    resb 256                 ; 32 entries * 8 bytes
+idt_entries:    resb 384                 ; 48 entries * 8 bytes (exceptions + IRQs)
 idt_desc:       resb 6                  ; IDT descriptor (2+4 bytes)
 
 section .text
@@ -171,6 +176,116 @@ isr_common:
     jmp .hang
 
 ; ============================================================================
+; IRQ Handler Stubs
+; ============================================================================
+%macro irq_stub 1
+irq%1:
+    push %1
+    jmp irq_common_handler
+%endmacro
+
+irq_stub 0
+irq_stub 1
+irq_stub 2
+irq_stub 3
+irq_stub 4
+irq_stub 5
+irq_stub 6
+irq_stub 7
+irq_stub 8
+irq_stub 9
+irq_stub 10
+irq_stub 11
+irq_stub 12
+irq_stub 13
+irq_stub 14
+irq_stub 15
+
+; ============================================================================
+; Common IRQ handler
+; ============================================================================
+irq_common_handler:
+    pusha
+    push ds
+    push es
+
+    mov ax, 0x10
+    mov ds, ax
+    mov es, ax
+
+    mov eax, [esp + 40]
+    mov edi, irq_handler_table
+    mov ebx, [edi + eax*4]
+    test ebx, ebx
+    jz .eoi
+
+    push eax
+    call ebx
+    add esp, 4
+
+.eoi:
+    mov al, 0x20
+    out 0x20, al
+    mov eax, [esp + 40]
+    cmp eax, 8
+    jl .restore
+    mov al, 0x20
+    out 0xA0, al
+
+.restore:
+    pop es
+    pop ds
+    popa
+    add esp, 4
+    iret
+
+; ============================================================================
+; Register IRQ handler
+; ============================================================================
+global register_irq_handler
+register_irq_handler:
+    push ebx
+    mov eax, [esp + 8]
+    mov ebx, [esp + 12]
+    mov [irq_handler_table + eax*4], ebx
+    pop ebx
+    ret
+
+; ============================================================================
+; PIC: unmask IRQ
+; ============================================================================
+global pic_unmask_irq
+pic_unmask_irq:
+    push eax
+    push ecx
+    push edx
+    movzx edx, byte [esp + 16]
+    cmp dl, 8
+    jae .slave
+    in al, 0x21
+    mov ecx, edx
+    mov ebx, 1
+    shl ebx, cl
+    not ebx
+    and al, bl
+    out 0x21, al
+    jmp .done
+.slave:
+    sub dl, 8
+    in al, 0xA1
+    mov ecx, edx
+    mov ebx, 1
+    shl ebx, cl
+    not ebx
+    and al, bl
+    out 0xA1, al
+.done:
+    pop edx
+    pop ecx
+    pop eax
+    ret
+
+; ============================================================================
 ; Initialize IDT
 ; ============================================================================
 global idt_init
@@ -201,8 +316,29 @@ idt_init:
     idt_entry isr18, 0x8E
     idt_entry isr19, 0x8E
 
+    ; Skip entries 20-31 (12 unused)
+    add edi, 12 * 8
+
+    ; IRQ gates (interrupt gates, ring 0) — entries 32-47
+    idt_entry irq0,  0x8E
+    idt_entry irq1,  0x8E
+    idt_entry irq2,  0x8E
+    idt_entry irq3,  0x8E
+    idt_entry irq4,  0x8E
+    idt_entry irq5,  0x8E
+    idt_entry irq6,  0x8E
+    idt_entry irq7,  0x8E
+    idt_entry irq8,  0x8E
+    idt_entry irq9,  0x8E
+    idt_entry irq10, 0x8E
+    idt_entry irq11, 0x8E
+    idt_entry irq12, 0x8E
+    idt_entry irq13, 0x8E
+    idt_entry irq14, 0x8E
+    idt_entry irq15, 0x8E
+
     ; Set up IDT descriptor
-    mov word [idt_desc], 256 - 1        ; limit = 32*8 - 1
+    mov word [idt_desc], 384 - 1        ; limit = 48*8 - 1
     mov eax, idt_entries
     mov [idt_desc+2], eax               ; base
 

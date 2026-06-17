@@ -10,6 +10,7 @@
 %include "sc/read.asm"       
 %include "sc/uname.asm"
 %include "sc/sysinfo.asm"
+%include "sc/uptime.asm"
 
 section .data
 align 4
@@ -29,6 +30,7 @@ command_table:
     dd str_read,    cmd_read
     dd str_uname,   cmd_uname
     dd str_sysinfo, cmd_sysinfo
+    dd str_uptime,  cmd_uptime
     dd 0, 0                    ; Null terminator
 
 section .text
