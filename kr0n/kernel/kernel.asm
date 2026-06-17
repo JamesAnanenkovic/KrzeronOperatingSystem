@@ -196,11 +196,11 @@ scancode_table:
 ; String Utilities
 ; ============================================================================
 strcmp:
-    push eax
+    push ebx
 .loop:
     mov al, [esi]
-    mov ah, [edi]
-    cmp al, ah
+    mov bl, [edi]
+    cmp al, bl
     jne .ne
     test al, al
     jz .eq
@@ -208,12 +208,12 @@ strcmp:
     inc edi
     jmp .loop
 .eq:
-    stc
-    jmp .done
+    xor eax, eax        ; EAX = 0 (eşit)
+    pop ebx
+    ret
 .ne:
-    clc
-.done:
-    pop eax
+    mov eax, 1          ; EAX = 1 (farklı)
+    pop ebx
     ret
 
 ; ============================================================================

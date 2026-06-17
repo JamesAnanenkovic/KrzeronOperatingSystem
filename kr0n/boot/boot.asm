@@ -46,6 +46,11 @@ start:
     mov si, msg_ok
     call print
     
+    ; Detect memory (real mode only - must be before PM switch)
+    mov ah, 0x88
+    int 0x15
+    mov [0x5000], ax        ; Store extended KB above 1MB
+    
     ; Enable A20 (fast method)
     in al, 0x92
     or al, 2

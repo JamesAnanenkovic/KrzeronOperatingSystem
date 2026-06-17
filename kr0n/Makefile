@@ -1,6 +1,6 @@
 # ==============================================================================
-# kr0nos OS Build System v0.0.4
-# Supports modular kernel with /kernel/sc/ command directory
+# kr0nos OS Build System v0.0.5
+# Supports modular kernel with /kernel/sc/ and /drivers/ directories
 # ==============================================================================
 
 # Tools
@@ -12,6 +12,7 @@ NASMFLAGS   = -f bin -I kernel/ -Wall
 BOOT_DIR    = boot
 KERNEL_DIR  = kernel
 SC_DIR      = $(KERNEL_DIR)/sc
+DRIVERS_DIR = drivers          # ← YENİ: Sürücü dizini
 BUILD_DIR   = build
 
 # Source files
@@ -21,7 +22,8 @@ KERNEL_SRC  = $(KERNEL_DIR)/kernel.asm
 # ALL kernel dependencies (for proper incremental builds)
 KERNEL_DEPS = $(KERNEL_SRC) \
               $(wildcard $(KERNEL_DIR)/*.asm) \
-              $(wildcard $(SC_DIR)/*.asm)
+              $(wildcard $(SC_DIR)/*.asm) \
+              $(wildcard $(DRIVERS_DIR)/*.asm)   # ← YENİ: Sürücü bağımlılıkları
 
 # Output files
 BOOT_BIN    = $(BUILD_DIR)/boot.bin
@@ -33,6 +35,7 @@ MAX_KERNEL_SIZE = 64512
 RED         = \033[0;31m
 GREEN       = \033[0;32m
 YELLOW      = \033[0;33m
+CYAN        = \033[0;36m       # ← YENİ: Sürücüler için renk
 NC          = \033[0m
 
 # ==============================================================================
@@ -57,7 +60,9 @@ $(BOOT_BIN): $(BOOT_SRC) | $(BUILD_DIR)
 	fi
 
 $(KERNEL_BIN): $(KERNEL_DEPS) | $(BUILD_DIR)
-	@printf "$(GREEN)[ASM]$(NC) Building kernel (mods: $(notdir $(wildcard $(SC_DIR)/*.asm)))...\n"
+	@printf "$(GREEN)[ASM]$(NC) Building kernel...\n"
+	@printf "$(CYAN)[MOD]$(NC) Commands: $(notdir $(wildcard $(SC_DIR)/*.asm))\n"
+	@printf "$(CYAN)[DRV]$(NC) Drivers:  $(notdir $(wildcard $(DRIVERS_DIR)/*.asm))\n"
 	$(NASM) $(NASMFLAGS) $(KERNEL_SRC) -o $@
 	@if [ $$(stat -c%s "$@" 2>/dev/null || stat -f%z "$@") -gt $(MAX_KERNEL_SIZE) ]; then \
 		printf "$(RED)[ERR]$(NC) Kernel exceeds $(MAX_KERNEL_SIZE) bytes!\n"; \
@@ -77,22 +82,18 @@ $(IMAGE): $(BOOT_BIN) $(KERNEL_BIN)
 # Runtime Targets
 # ==============================================================================
 
-# Standard run (opens graphical window)
 run: $(IMAGE)
 	@printf "$(GREEN)[RUN]$(NC) Starting kr0nos ( graphical mode )...\n"
 	$(QEMU) -fda $(IMAGE) -boot a
 
-# Text-mode run (no graphics window, runs in terminal)
 run-text: $(IMAGE)
 	@printf "$(GREEN)[RUN]$(NC) Starting kr0nos ( text mode )...\n"
 	$(QEMU) -fda $(IMAGE) -boot a -nographic
 
-# Debug with serial output to terminal
 debug: $(IMAGE)
 	@printf "$(GREEN)[DBG]$(NC) Starting with serial debug...\n"
 	$(QEMU) -fda $(IMAGE) -boot a -serial stdio
 
-# GDB debug server (freezes at startup, wait for GDB connection)
 gdb: $(IMAGE)
 	@printf "$(GREEN)[GDB]$(NC) Starting QEMU GDB server on :1234...\n"
 	@printf "$(YELLOW)[GDB]$(NC) Connect with: gdb target remote :1234\n"
@@ -109,6 +110,8 @@ info: $(IMAGE)
 	@printf "Image:      %s bytes\n" "$$(stat -c%s '$(IMAGE)' 2>/dev/null || stat -f%z '$(IMAGE)')"
 	@printf "\n$(YELLOW)=== Command Modules ===$(NC)\n"
 	@ls -1 $(SC_DIR)/*.asm 2>/dev/null | xargs -n1 basename | sed 's/^/  - /' || printf "  (none found)\n"
+	@printf "\n$(CYAN)=== Driver Modules ===$(NC)\n"
+	@ls -1 $(DRIVERS_DIR)/*.asm 2>/dev/null | xargs -n1 basename | sed 's/^/  - /' || printf "  (none found)\n"
 
 hex: $(KERNEL_BIN)
 	hexdump -C $(KERNEL_BIN) | less

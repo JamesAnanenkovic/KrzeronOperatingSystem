@@ -1,69 +1,68 @@
 ; /kernel/commands.asm - Command Registry and Dispatcher
-; Wires together all command modules from /kernel/sc/
 
-struc cmd_entry
-    .name: resd 1
-    .func: resd 1
-endstruc
-
-; Include command implementations
+; ============================================
+; Komut implementasyonları
+; ============================================
 %include "sc/help.asm"
 %include "sc/clear.asm"
 %include "sc/about.asm"
 %include "sc/exit.asm"
-%include "sc/read.asm"       ; NEW: Experimental disk read
-%include "sc/uname.asm"      ; NEW: System info
+%include "sc/read.asm"       
+%include "sc/uname.asm"
+%include "sc/sysinfo.asm"
 
 section .data
 align 4
+
+; ============================================
+; Komut isimleri
+; ============================================
+
+; ============================================
+; Komut tablosu
+; ============================================
 command_table:
-    istruc cmd_entry
-        at cmd_entry.name, dd str_help
-        at cmd_entry.func, dd cmd_help
-    iend
-    istruc cmd_entry
-        at cmd_entry.name, dd str_clear
-        at cmd_entry.func, dd cmd_clear
-    iend
-    istruc cmd_entry
-        at cmd_entry.name, dd str_about
-        at cmd_entry.func, dd cmd_about
-    iend
-    istruc cmd_entry
-        at cmd_entry.name, dd str_exit
-        at cmd_entry.func, dd cmd_exit
-    iend
-    istruc cmd_entry           ; NEW ENTRY
-        at cmd_entry.name, dd str_read
-        at cmd_entry.func, dd cmd_read
-    iend
-    istruc cmd_entry           ; NEW ENTRY
-        at cmd_entry.name, dd str_uname
-        at cmd_entry.func, dd cmd_uname
-    iend
+    dd str_help,    cmd_help
+    dd str_clear,   cmd_clear
+    dd str_about,   cmd_about
+    dd str_exit,    cmd_exit
+    dd str_read,    cmd_read
+    dd str_uname,   cmd_uname
+    dd str_sysinfo, cmd_sysinfo
     dd 0, 0                    ; Null terminator
 
 section .text
 global execute_command
+
+; ============================================
+; Komut çalıştırıcı
+; ============================================
 execute_command:
     pusha
     mov ebx, command_table
     
 .search_loop:
-    mov edi, [ebx + cmd_entry.name]
+    mov edi, [ebx]          ; name pointer
     test edi, edi
     jz .not_found
     
+    ; Karşılaştır
     push esi
-    call strcmp
+    push edi
+    pop edi
     pop esi
-    jc .found
+    push esi
+    call strcmp             ; kernel.asm'den geliyor
+    pop esi
     
-    add ebx, 8
+    test eax, eax
+    jz .found
+    
+    add ebx, 8              ; sonraki giriş
     jmp .search_loop
     
 .found:
-    mov eax, [ebx + cmd_entry.func]
+    mov eax, [ebx + 4]      ; function pointer
     call eax
     popa
     ret
