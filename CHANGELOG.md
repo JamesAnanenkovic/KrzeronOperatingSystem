@@ -20,4 +20,4 @@
 | 0.0.8   | Physical page allocator (bitmap-based, 4KB pages), `free` command |
 | 0.0.9   | Heap allocator (malloc/free, free-list based), `testalloc` command |
 | 0.0.9.1 | Enhanced `testalloc` with 3 tests (basic, multi-alloc, fragmentation), README updated |
-| 0.0.10  | ATA PIO LBA28 driver (drivers/ata.asm), `read` command rewritten with LBA arg, hex dump |
+| 0.0.A   | ATA PIO LBA28 driver (drivers/ata.asm), `read` command rewritten with LBA arg, hex dump |
