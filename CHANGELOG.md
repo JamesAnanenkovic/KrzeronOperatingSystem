@@ -21,3 +21,4 @@
 | 0.0.9   | Heap allocator (malloc/free, free-list based), `testalloc` command |
 | 0.0.9.1 | Enhanced `testalloc` with 3 tests (basic, multi-alloc, fragmentation), README updated |
 | 0.0.A   | ATA PIO LBA28 driver (drivers/ata.asm), `read` command rewritten with LBA arg, hex dump |
+| 0.0.B   | FAT12 filesystem driver (drivers/fat.asm), `ls` and `cat` commands, FAT12 floppy image builder (build_fat.py) |

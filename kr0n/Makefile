@@ -30,6 +30,7 @@ BOOT_BIN    = $(BUILD_DIR)/boot.bin
 KERNEL_BIN  = $(BUILD_DIR)/kernel.bin
 IMAGE       = $(BUILD_DIR)/kr0nos.img
 HDD_IMG     = $(BUILD_DIR)/hdd.img
+FAT_IMG     = $(BUILD_DIR)/fat12.img
 MAX_KERNEL_SIZE = 64512
 
 # Colors (using printf for compatibility)
@@ -45,9 +46,7 @@ NC          = \033[0m
 
 .PHONY: all run run-text debug clean info hdd
 
-all: $(IMAGE) $(HDD_IMG)
-
-all: $(IMAGE)
+all: $(IMAGE) $(HDD_IMG) $(FAT_IMG)
 
 $(BUILD_DIR):
 	@mkdir -p $(BUILD_DIR)
@@ -89,25 +88,30 @@ $(HDD_IMG): | $(BUILD_DIR)
 	@printf "$(GREEN)[HDD]$(NC) Setting boot signature...\n"
 	@printf '\x55\xAA' | dd of=$(HDD_IMG) conv=notrunc bs=1 seek=510 status=none
 
+$(FAT_IMG): build_fat.py | $(BUILD_DIR)
+	@printf "$(YELLOW)[FAT]$(NC) Creating FAT12 image...\n"
+	@python3 build_fat.py
+	@printf "$(GREEN)[FAT]$(NC) FAT12 image created: $(FAT_IMG)\n"
+
 # ==============================================================================
 # Runtime Targets
 # ==============================================================================
 
-QEMU_HDD = -hda $(HDD_IMG)
+QEMU_HDD = -hda $(FAT_IMG)
 
-run: $(IMAGE) $(HDD_IMG)
+run: $(IMAGE) $(FAT_IMG)
 	@printf "$(GREEN)[RUN]$(NC) Starting kr0nos ( graphical mode )...\n"
 	$(QEMU) -fda $(IMAGE) $(QEMU_HDD) -boot a
 
-run-text: $(IMAGE) $(HDD_IMG)
+run-text: $(IMAGE) $(FAT_IMG)
 	@printf "$(GREEN)[RUN]$(NC) Starting kr0nos ( text mode )...\n"
 	$(QEMU) -fda $(IMAGE) $(QEMU_HDD) -boot a -nographic
 
-debug: $(IMAGE) $(HDD_IMG)
+debug: $(IMAGE) $(FAT_IMG)
 	@printf "$(GREEN)[DBG]$(NC) Starting with serial debug...\n"
 	$(QEMU) -fda $(IMAGE) $(QEMU_HDD) -boot a -serial stdio
 
-gdb: $(IMAGE) $(HDD_IMG)
+gdb: $(IMAGE) $(FAT_IMG)
 	@printf "$(GREEN)[GDB]$(NC) Starting QEMU GDB server on :1234...\n"
 	@printf "$(YELLOW)[GDB]$(NC) Connect with: gdb target remote :1234\n"
 	$(QEMU) -fda $(IMAGE) $(QEMU_HDD) -boot a -s -S -serial stdio
@@ -116,11 +120,12 @@ gdb: $(IMAGE) $(HDD_IMG)
 # Utility Targets
 # ==============================================================================
 
-info: $(IMAGE)
+info: $(IMAGE) $(FAT_IMG)
 	@printf "$(YELLOW)=== Build Information ===$(NC)\n"
 	@printf "Bootloader: %s bytes\n" "$$(stat -c%s '$(BOOT_BIN)' 2>/dev/null || stat -f%z '$(BOOT_BIN)')"
 	@printf "Kernel:     %s bytes\n" "$$(stat -c%s '$(KERNEL_BIN)' 2>/dev/null || stat -f%z '$(KERNEL_BIN)')"
 	@printf "Image:      %s bytes\n" "$$(stat -c%s '$(IMAGE)' 2>/dev/null || stat -f%z '$(IMAGE)')"
+	@printf "FAT12:      %s bytes\n" "$$(stat -c%s '$(FAT_IMG)' 2>/dev/null || stat -f%z '$(FAT_IMG)')"
 	@printf "\n$(YELLOW)=== Command Modules ===$(NC)\n"
 	@ls -1 $(SC_DIR)/*.asm 2>/dev/null | xargs -n1 basename | sed 's/^/  - /' || printf "  (none found)\n"
 	@printf "\n$(CYAN)=== Driver Modules ===$(NC)\n"
@@ -141,4 +146,7 @@ check:
 	@for file in $(KERNEL_DEPS) $(BOOT_SRC); do \
 		$(NASM) $(NASMFLAGS) -o /dev/null $$file || exit 1; \
 	done
-	@printf "$(GREEN)[OK]$(NC) Syntax check passed\n"
+	@printf "$(GREEN)[ASM]$(NC) Assembly syntax OK\n"
+	@python3 -m py_compile build_fat.py && \
+		printf "$(GREEN)[PY]$(NC) Python syntax OK\n" || \
+		printf "$(YELLOW)[PY]$(NC) Python check not available\n"

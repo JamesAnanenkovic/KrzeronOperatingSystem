@@ -3,7 +3,7 @@ bits 16
 org 0x7C00
 
 KERNEL_SEG      equ 0x1000
-SECTORS_TO_LOAD equ 16
+SECTORS_TO_LOAD equ 32
 
 start:
     cli

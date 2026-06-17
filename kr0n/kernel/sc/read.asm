@@ -1,6 +1,5 @@
 ; /kernel/sc/read.asm - Disk sector reader (ATA PIO LBA28)
 ; Usage: read [lba]  — reads one sector, hex-dumps first 16 bytes
-%include "drivers/ata.asm"
 
 global str_read, cmd_read
 

@@ -1,6 +1,12 @@
 ; /kernel/commands.asm - Command Registry and Dispatcher
 
 ; ============================================
+; Sürücüler (tüm komutlar için ortak)
+; ============================================
+%include "drivers/ata.asm"
+%include "drivers/fat.asm"
+
+; ============================================
 ; Komut implementasyonları
 ; ============================================
 %include "sc/help.asm"
@@ -16,6 +22,8 @@
 %include "sc/reboot.asm"
 %include "sc/free.asm"
 %include "sc/testalloc.asm"
+%include "sc/ls.asm"
+%include "sc/cat.asm"
 
 section .data
 align 4
@@ -41,6 +49,8 @@ command_table:
     dd str_reboot,  cmd_reboot
     dd str_free,    cmd_free
     dd str_testalloc, cmd_testalloc
+    dd str_ls,      cmd_ls
+    dd str_cat,     cmd_cat
     dd 0, 0                    ; Null terminator
 
 section .text
